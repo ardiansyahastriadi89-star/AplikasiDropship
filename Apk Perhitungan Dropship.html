@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Kalkulator Dropship Terintegrasi</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; padding: 20px; }
+        .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 400px; margin: auto; }
+        .input-group { margin-bottom: 10px; }
+        label { display: block; font-weight: bold; font-size: 0.85em; }
+        input { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ddd; border-radius: 5px; }
+        button { width: 100%; padding: 10px; margin-top: 10px; border: none; border-radius: 5px; cursor: pointer; color: white; font-weight: bold; }
+        .btn-calc { background: #27ae60; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; }
+        th, td { border: 1px solid #ddd; padding: 8px; font-size: 0.8em; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>Dropship Calculator</h2>
+    <div class="input-group"><label>Nama Produk</label><input type="text" id="namaProduk"></div>
+    <div class="input-group"><label>Harga Jual (Rp)</label><input type="number" id="jual"></div>
+    <div class="input-group"><label>Diskon (%)</label><input type="number" id="diskon" value="0"></div>
+    <div class="input-group"><label>Modal (Rp)</label><input type="number" id="modal"></div>
+    <div class="input-group"><label>Ongkir (Rp)</label><input type="number" id="ongkir"></div>
+    <div class="input-group"><label>Admin (Rp)</label><input type="number" id="admin"></div>
+    
+    <button class="btn-calc" onclick="prosesData()">Hitung & Sinkronisasi</button>
+</div>
+
+<table id="tabelHasil">
+    <thead><tr><th>Produk</th><th>Untung</th><th>Status</th></tr></thead>
+    <tbody id="isiTabel"></tbody>
+</table>
+
+<script>
+    const GOOGLE_SCRIPT_URL = "URL_WEB_APP_KAMU_DISINI";
+
+    async function prosesData() {
+        const data = {
+            nama: document.getElementById('namaProduk').value,
+            jual: parseFloat(document.getElementById('jual').value) || 0,
+            diskon: parseFloat(document.getElementById('diskon').value) || 0,
+            modal: parseFloat(document.getElementById('modal').value) || 0,
+            ongkir: parseFloat(document.getElementById('ongkir').value) || 0,
+            admin: parseFloat(document.getElementById('admin').value) || 0
+        };
+
+        // Perhitungan
+        const hargaBersih = data.jual - (data.jual * (data.diskon / 100));
+        const totalModal = data.modal + data.ongkir + data.admin;
+        data.untung = hargaBersih - totalModal;
+
+        // 1. Tambah ke tabel lokal
+        const tbody = document.getElementById('isiTabel');
+        const row = tbody.insertRow();
+        row.innerHTML = `<td>${data.nama}</td><td>Rp ${data.untung.toLocaleString()}</td><td>${data.untung >= 0 ? '✅' : '❌'}</td>`;
+
+        // 2. Kirim ke Google Sheets
+        try {
+            await fetch(GOOGLE_SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            alert("Data berhasil tersinkronisasi ke Google Sheets!");
+        } catch (error) {
+            console.error("Gagal sinkronisasi:", error);
+        }
+    }
+</script>
+</body>
+</html>
