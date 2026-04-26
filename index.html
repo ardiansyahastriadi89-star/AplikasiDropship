@@ -49,7 +49,9 @@
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz6aLfDCcNYga8M8usMfvlNcmfwmIxzBdN1SSLGu4WBH0ZwzynhZ7iNXgts6GGPUlGi/exec";
 
     function parseCleanNumber(value) {
-        return parseFloat(value.toString().replace(/\./g, '').replace(/,/g, '')) || 0;
+        if (!value) return 0;
+        let sanitized = value.toString().replace(/\./g, '').replace(',', '.');
+        return parseFloat(sanitized) || 0;
     }
 
     async function prosesData() {
