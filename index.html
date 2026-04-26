@@ -10,6 +10,7 @@
         .card { background: #1e293b; padding: 20px; border-radius: 12px; border: 1px solid #334155; margin-bottom: 20px; }
         input { width: 100%; padding: 8px; margin: 5px 0 10px 0; background: #0f172a; border: 1px solid #475569; border-radius: 6px; color: white; box-sizing: border-box; }
         .btn-calc { background: #0ea5e9; width: 100%; padding: 10px; border: none; border-radius: 6px; color: white; cursor: pointer; }
+        .btn-del { background: #ef4444; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th, td { padding: 10px; border: 1px solid #334155; text-align: center; }
     </style>
@@ -18,16 +19,17 @@
 
 <div class="main-container">
     <div class="card">
-    <h2>Input Produk</h2>
-    Nama Produk<input type="text" id="nama" placeholder="Nama Produk" required>
-    Tipe/Warna/Variasi<input type="text" id="tipe" placeholder="Tipe/Warna/Variasi"> Modal<input type="number" id="modal" placeholder="Modal (Rp)" min="0">
-    Harga Jual<input type="number" id="jual" placeholder="Harga Jual (Rp)" min="0">
-    Diskon<input type="number" id="diskon" placeholder="Diskon (%)" value="0">
-    Admin<input type="number" id="admin" placeholder="Admin (Rp)" value="0">
-    Ongkir<input type="number" id="ongkir" placeholder="Ongkir (Rp)" value="0">
-    Link Produk<input type="text" id="link" placeholder="https://">
-    <button class="btn-calc" onclick="prosesData()">Simpan</button>
-</div>
+        <h2>Input Produk</h2>
+        Nama Produk<input type="text" id="nama" placeholder="Nama Produk" required>
+        Tipe/Warna/Variasi<input type="text" id="tipe" placeholder="Tipe/Warna/Variasi"> 
+        Modal<input type="number" id="modal" placeholder="Modal (Rp)" min="0">
+        Harga Jual<input type="number" id="jual" placeholder="Harga Jual (Rp)" min="0">
+        Diskon<input type="number" id="diskon" placeholder="Diskon (%)" value="0">
+        Admin<input type="number" id="admin" placeholder="Admin (Rp)" value="0">
+        Ongkir<input type="number" id="ongkir" placeholder="Ongkir (Rp)" value="0">
+        Link Produk<input type="text" id="link" placeholder="https://">
+        <button class="btn-calc" onclick="prosesData()">Simpan Data</button>
+    </div>
 
     <div>
         <div class="card">
@@ -36,7 +38,7 @@
         </div>
         <div class="card">
             <table id="tabelHasil">
-                <thead><tr><th>Produk</th><th>Profit</th></tr></thead>
+                <thead><tr><th>Produk</th><th>Profit</th><th>Aksi</th></tr></thead>
                 <tbody id="isiTabel"></tbody>
             </table>
         </div>
@@ -44,29 +46,34 @@
 </div>
 
 <script>
-    // GANTI DENGAN URL WEB APP GOOGLE SCRIPT ANDA
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz6aLfDCcNYga8M8usMfvlNcmfwmIxzBdN1SSLGu4WBH0ZwzynhZ7iNXgts6GGPUlGi/exec";
 
+    function parseCleanNumber(value) {
+        return parseFloat(value.toString().replace(/\./g, '').replace(/,/g, '')) || 0;
+    }
+
     async function prosesData() {
-    const data = {
-        nama: document.getElementById('nama').value,
-        tipe: document.getElementById('tipe').value, // Mengambil dari ID baru
-        modal: parseFloat(document.getElementById('modal').value) || 0,
-        jual: parseFloat(document.getElementById('jual').value) || 0,
-        diskon: parseFloat(document.getElementById('diskon').value) || 0,
-        admin: parseFloat(document.getElementById('admin').value) || 0,
-        ongkir: parseFloat(document.getElementById('ongkir').value) || 0,
-        link: document.getElementById('link').value // Koma di baris sebelumnya sudah benar
-    };
+        const data = {
+            nama: document.getElementById('nama').value,
+            tipe: document.getElementById('tipe').value,
+            modal: parseCleanNumber(document.getElementById('modal').value),
+            jual: parseCleanNumber(document.getElementById('jual').value),
+            diskon: parseCleanNumber(document.getElementById('diskon').value),
+            admin: parseCleanNumber(document.getElementById('admin').value),
+            ongkir: parseCleanNumber(document.getElementById('ongkir').value),
+            link: document.getElementById('link').value
+        };
 
-    if(!data.nama) return alert("Isi nama produk!");
+        if(!data.nama) return alert("Isi nama produk!");
 
-    const hargaBersih = data.jual - (data.jual * (data.diskon / 100));
-    const profit = hargaBersih - (data.modal + data.admin + data.ongkir);
+        const hargaBersih = data.jual - (data.jual * (data.diskon / 100));
+        const profit = hargaBersih - (data.modal + data.admin + data.ongkir);
 
-        // 1. Update UI Tabel
+        // 1. Update Tabel
         const tbody = document.getElementById('isiTabel');
-        tbody.innerHTML += `<tr><td>${data.nama}</td><td>Rp ${profit.toLocaleString()}</td></tr>`;
+        const row = document.createElement('tr');
+        row.innerHTML = `<td>${data.nama}</td><td>Rp ${profit.toLocaleString()}</td><td><button class="btn-del" onclick="hapusData('${data.nama}', this)">Hapus</button></td>`;
+        tbody.appendChild(row);
 
         // 2. Sync ke Google Sheets
         try {
@@ -82,9 +89,27 @@
 
         // 3. Update Grafik
         updateChart(data.nama, profit);
+        
+        // Reset Form
+        document.querySelectorAll('input').forEach(i => i.value = '');
     }
 
-    // Inisialisasi Grafik
+    async function hapusData(namaProduk, btn) {
+        if (!confirm("Yakin ingin menghapus " + namaProduk + "?")) return;
+
+        try {
+            await fetch(GOOGLE_SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                body: JSON.stringify({ action: 'hapus', nama: namaProduk })
+            });
+            btn.parentElement.parentElement.remove();
+            alert("Data berhasil dihapus.");
+        } catch(e) {
+            alert("Gagal menghapus data.");
+        }
+    }
+
     const ctx = document.getElementById('profitChart').getContext('2d');
     const profitChart = new Chart(ctx, {
         type: 'bar',
