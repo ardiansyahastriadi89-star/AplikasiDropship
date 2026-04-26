@@ -33,6 +33,15 @@
     <div class="card">
         <h2>Input Produk</h2>
         <input type="hidden" id="editIndex" value="-1">
+
+        <div id="previewArea" style="text-align: center; margin-top: 5px; padding: 5px; background: #1e293b; border-radius: 3px; border: 2px solid #f8ac08; display: none;">
+    <div style="font-size: 0.9em; color: #e7eaee; text-transform: uppercase; letter-spacing: 1px;">
+        Estimasi Profit
+    </div>
+    <div id="previewProfit" style="font-size: 1.5em; font-weight: bold; color: #4ade80; margin-top: 5px;">
+        Rp 0
+    </div>
+</div>
         
         <div class="form-grid">
             <div>Nama Produk<input type="text" id="nama" required></div>
@@ -48,6 +57,7 @@
         </div>
 
         <button class="btn-action btn-save" onclick="simpanData()">Simpan Data</button>
+        
         <button class="btn-action btn-reset" onclick="resetData()">Reset Semua Data</button>
     </div>
          
@@ -115,6 +125,33 @@
     }
 
     document.querySelectorAll('input:not([type="hidden"])').forEach(i => i.value = '');
+}
+
+// Tambahkan event listener untuk memantau ketikan
+['modal', 'jual', 'diskon', 'admin', 'ongkir'].forEach(id => {
+    document.getElementById(id).addEventListener('input', updatePreview);
+});
+
+function updatePreview() {
+    const modal = parseCleanNumber(document.getElementById('modal').value);
+    const jual = parseCleanNumber(document.getElementById('jual').value);
+    const diskon = parseCleanNumber(document.getElementById('diskon').value);
+    const admin = parseCleanNumber(document.getElementById('admin').value);
+    const ongkir = parseCleanNumber(document.getElementById('ongkir').value);
+
+    const hargaBersih = jual - (jual * (diskon / 100));
+    const profit = hargaBersih - (modal + admin + ongkir);
+
+    const previewArea = document.getElementById('previewArea');
+    const previewProfit = document.getElementById('previewProfit');
+
+    if (jual > 0) {
+        previewArea.style.display = 'block';
+        previewProfit.innerText = 'Rp ' + profit.toLocaleString();
+        previewProfit.style.color = profit >= 0 ? '#4ade80' : '#f87171';
+    } else {
+        previewArea.style.display = 'none';
+    }
 }
 
     function renderTable() {
