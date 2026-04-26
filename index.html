@@ -35,12 +35,12 @@
             <div>Nama Produk<input type="text" id="nama" required></div>
             <div>Supplier<input type="text" id="supplier"></div>
             <div>Tipe/Variasi<input type="text" id="tipe"></div>
-            <div>Modal<input type="text" id="modal" placeholder="100.000"></div>
-            <div>Harga Jual<input type="text" id="jual" placeholder="150.000"></div>
+            <div>Modal<input type="text" id="modal" placeholder="Rp" required></div>
+            <div>Harga Jual<input type="text" id="jual" placeholder="Rp" required></div>
             <div>Diskon (%)<input type="number" id="diskon" value="0"></div>
-            <div>Admin (Rp)<input type="text" id="admin" value="0"></div>
+            <div>Admin (Rp)<input type="text" id="admin" value="0" ></div>
             <div>Ongkir (Rp)<input type="text" id="ongkir" value="0"></div>
-            <div class="full-width">Link Produk<input type="text" id="link"></div>
+            <div class="full-width">Link Produk<input type="text" id="link" required></div>
         </div>
 
         <button class="btn-action btn-save" onclick="simpanData()">Simpan Data</button>
@@ -151,7 +151,7 @@
     }
 
     function resetData() {
-        if(confirm("Hapus semua data?")) {
+        if(confirm("Yakin hapus semua data?")) {
             localStorage.removeItem('dropshipData');
             dataList = [];
             renderTable();
