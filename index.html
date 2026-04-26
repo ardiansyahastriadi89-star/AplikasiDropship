@@ -2,16 +2,19 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Dropship Pro - Ultimate Dashboard</title>
+    <title>Aplikasi Dropship</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body { font-family: 'Segoe UI', sans-serif; background: #0f172a; color: #e2e8f0; padding: 20px; }
         .main-container { display: grid; grid-template-columns: 350px 1fr; gap: 20px; max-width: 1400px; margin: auto; }
         .card { background: #1e293b; padding: 20px; border-radius: 12px; border: 1px solid #334155; margin-bottom: 20px; }
         input { width: 100%; padding: 8px; margin: 5px 0 10px 0; background: #0f172a; border: 1px solid #475569; border-radius: 6px; color: white; box-sizing: border-box; }
-        .btn-calc { background: #0ea5e9; width: 100%; padding: 10px; border: none; border-radius: 6px; color: white; cursor: pointer; }
-        .btn-del { background: #ef4444; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .btn-action { padding: 8px; border: none; border-radius: 6px; cursor: pointer; color: white; margin-right: 5px; }
+        .btn-save { background: #05ac2f; width: 100%; }
+        .btn-edit { background: #f59e0b; }
+        .btn-del { background: #ef4444; }
+        .btn-reset { background: #0544f0; width: 100%; margin-top: 10px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.85em; }
         th, td { padding: 10px; border: 1px solid #334155; text-align: center; }
     </style>
 </head>
@@ -20,15 +23,17 @@
 <div class="main-container">
     <div class="card">
         <h2>Input Produk</h2>
-        Nama Produk<input type="text" id="nama" placeholder="Nama Produk" required>
-        Tipe/Warna/Variasi<input type="text" id="tipe" placeholder="Tipe/Warna/Variasi"> 
-        Modal<input type="number" id="modal" placeholder="Modal (Rp)" min="0">
-        Harga Jual<input type="number" id="jual" placeholder="Harga Jual (Rp)" min="0">
-        Diskon<input type="number" id="diskon" placeholder="Diskon (%)" value="0">
-        Admin<input type="number" id="admin" placeholder="Admin (Rp)" value="0">
-        Ongkir<input type="number" id="ongkir" placeholder="Ongkir (Rp)" value="0">
-        Link Produk<input type="text" id="link" placeholder="https://">
-        <button class="btn-calc" onclick="prosesData()">Simpan Data</button>
+        <input type="hidden" id="editIndex" value="-1">
+        Nama Produk<input type="text" id="nama" required>
+        Supplier<input type="text" id="supplier">
+        Modal<input type="text" id="modal" placeholder="Contoh: 100.000">
+        Harga Jual<input type="text" id="jual" placeholder="Contoh: 150.000">
+        Diskon (%)<input type="number" id="diskon" value="0">
+        Admin (Rp)<input type="text" id="admin" value="0">
+        Ongkir (Rp)<input type="text" id="ongkir" value="0">
+        Link Produk<input type="text" id="link">
+        <button class="btn-action btn-save" onclick="simpanData()">Simpan Data</button>
+        <button class="btn-action btn-reset" onclick="resetData()">Reset Semua Data</button>
     </div>
 
     <div>
@@ -38,7 +43,7 @@
         </div>
         <div class="card">
             <table id="tabelHasil">
-                <thead><tr><th>Produk</th><th>Profit</th><th>Aksi</th></tr></thead>
+                <thead><tr><th>Produk</th><th>Supplier</th><th>Profit</th><th>Status</th><th>Link</th><th>Aksi</th></tr></thead>
                 <tbody id="isiTabel"></tbody>
             </table>
         </div>
@@ -47,17 +52,18 @@
 
 <script>
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz6aLfDCcNYga8M8usMfvlNcmfwmIxzBdN1SSLGu4WBH0ZwzynhZ7iNXgts6GGPUlGi/exec";
+    let dataList = JSON.parse(localStorage.getItem('dropshipData')) || [];
 
     function parseCleanNumber(value) {
-        if (!value) return 0;
         let sanitized = value.toString().replace(/\./g, '').replace(',', '.');
         return parseFloat(sanitized) || 0;
     }
 
-    async function prosesData() {
+    async function simpanData() {
+        const editIndex = document.getElementById('editIndex').value;
         const data = {
             nama: document.getElementById('nama').value,
-            tipe: document.getElementById('tipe').value,
+            supplier: document.getElementById('supplier').value,
             modal: parseCleanNumber(document.getElementById('modal').value),
             jual: parseCleanNumber(document.getElementById('jual').value),
             diskon: parseCleanNumber(document.getElementById('diskon').value),
@@ -69,60 +75,87 @@
         if(!data.nama) return alert("Isi nama produk!");
 
         const hargaBersih = data.jual - (data.jual * (data.diskon / 100));
-        const profit = hargaBersih - (data.modal + data.admin + data.ongkir);
+        data.profit = hargaBersih - (data.modal + data.admin + data.ongkir);
 
-        // 1. Update Tabel
-        const tbody = document.getElementById('isiTabel');
-        const row = document.createElement('tr');
-        row.innerHTML = `<td>${data.nama}</td><td>Rp ${profit.toLocaleString()}</td><td><button class="btn-del" onclick="hapusData('${data.nama}', this)">Hapus</button></td>`;
-        tbody.appendChild(row);
-
-        // 2. Sync ke Google Sheets
-        try {
-            await fetch(GOOGLE_SCRIPT_URL, {
-                method: 'POST',
-                mode: 'no-cors',
-                body: JSON.stringify({...data, profit})
-            });
-            alert("Data berhasil tersimpan!");
-        } catch(e) {
-            console.error("Gagal sinkronisasi:", e);
+        if (editIndex === "-1") {
+            dataList.push(data);
+        } else {
+            dataList[editIndex] = data;
+            document.getElementById('editIndex').value = "-1";
         }
-
-        // 3. Update Grafik
-        updateChart(data.nama, profit);
         
-        // Reset Form
-        document.querySelectorAll('input').forEach(i => i.value = '');
-    }
-
-    async function hapusData(namaProduk, btn) {
-        if (!confirm("Yakin ingin menghapus " + namaProduk + "?")) return;
-
+        localStorage.setItem('dropshipData', JSON.stringify(dataList));
+        renderTable();
+        
+        // Sync ke Google Sheets
         try {
             await fetch(GOOGLE_SCRIPT_URL, {
                 method: 'POST',
                 mode: 'no-cors',
-                body: JSON.stringify({ action: 'hapus', nama: namaProduk })
+                body: JSON.stringify(data)
             });
-            btn.parentElement.parentElement.remove();
-            alert("Data berhasil dihapus.");
-        } catch(e) {
-            alert("Gagal menghapus data.");
+        } catch(e) { console.error("Sync gagal", e); }
+
+        document.querySelectorAll('input:not([type="hidden"])').forEach(i => i.value = '');
+    }
+
+    function renderTable() {
+        const tbody = document.getElementById('isiTabel');
+        tbody.innerHTML = '';
+        dataList.forEach((item, index) => {
+            tbody.innerHTML += `<tr>
+                <td>${item.nama}</td><td>${item.supplier}</td>
+                <td style="color:${item.profit>=0?'#4ade80':'#f87171'}">Rp ${item.profit.toLocaleString()}</td>
+                <td>${item.profit >= 0 ? "Untung" : "Rugi"}</td>
+                <td><a href="${item.link}" target="_blank">Link</a></td>
+                <td>
+                    <button class="btn-action btn-edit" onclick="editData(${index})">Edit</button>
+                    <button class="btn-action btn-del" onclick="hapusData(${index})">Hapus</button>
+                </td>
+            </tr>`;
+        });
+        updateChart();
+    }
+
+    function editData(index) {
+        const item = dataList[index];
+        document.getElementById('nama').value = item.nama;
+        document.getElementById('supplier').value = item.supplier;
+        document.getElementById('modal').value = item.modal;
+        document.getElementById('jual').value = item.jual;
+        document.getElementById('diskon').value = item.diskon;
+        document.getElementById('admin').value = item.admin;
+        document.getElementById('ongkir').value = item.ongkir;
+        document.getElementById('link').value = item.link;
+        document.getElementById('editIndex').value = index;
+    }
+
+    async function hapusData(index) {
+        if (!confirm("Yakin hapus?")) return;
+        dataList.splice(index, 1);
+        localStorage.setItem('dropshipData', JSON.stringify(dataList));
+        renderTable();
+    }
+
+    function resetData() {
+        if(confirm("Hapus semua data?")) {
+            localStorage.removeItem('dropshipData');
+            dataList = [];
+            renderTable();
         }
     }
 
+    // Grafik
     const ctx = document.getElementById('profitChart').getContext('2d');
-    const profitChart = new Chart(ctx, {
-        type: 'bar',
-        data: { labels: [], datasets: [{ label: 'Profit (Rp)', data: [], backgroundColor: '#0ea5e9' }] }
-    });
+    let profitChart = new Chart(ctx, { type: 'bar', data: { labels: [], datasets: [{ label: 'Profit', data: [], backgroundColor: '#0ea5e9' }] } });
 
-    function updateChart(label, value) {
-        profitChart.data.labels.push(label);
-        profitChart.data.datasets[0].data.push(value);
+    function updateChart() {
+        profitChart.data.labels = dataList.map(i => i.nama);
+        profitChart.data.datasets[0].data = dataList.map(i => i.profit);
         profitChart.update();
     }
+
+    window.onload = renderTable;
 </script>
 </body>
 </html>
