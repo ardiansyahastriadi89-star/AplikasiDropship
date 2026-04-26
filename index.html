@@ -6,14 +6,20 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body { font-family: 'Segoe UI', sans-serif; background: #0f172a; color: #e2e8f0; padding: 20px; }
-        .main-container { display: grid; grid-template-columns: 350px 1fr; gap: 20px; max-width: 1400px; margin: auto; }
+        .main-container { display: grid; grid-template-columns: 450px 1fr; gap: 20px; max-width: 1400px; margin: auto; }
         .card { background: #1e293b; padding: 20px; border-radius: 12px; border: 1px solid #334155; margin-bottom: 20px; }
-        input { width: 100%; padding: 8px; margin: 5px 0 10px 0; background: #0f172a; border: 1px solid #475569; border-radius: 6px; color: white; box-sizing: border-box; }
-        .btn-action { padding: 8px; border: none; border-radius: 6px; cursor: pointer; color: white; margin-right: 5px; }
-        .btn-save { background: #05ac2f; width: 100%; }
-        .btn-edit { background: #f59e0b; }
-        .btn-del { background: #ef4444; }
-        .btn-reset { background: #0615e2; width: 100%; margin-top: 10px; }
+        
+        /* Layout Grid untuk Input Form */
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .full-width { grid-column: span 2; }
+        
+        input { width: 100%; padding: 8px; margin: 5px 0 5px 0; background: #0f172a; border: 1px solid #475569; border-radius: 6px; color: white; box-sizing: border-box; }
+        .btn-action { padding: 10px; border: none; border-radius: 6px; cursor: pointer; color: white; width: 100%; margin-top: 10px; font-weight: bold; }
+        .btn-save { background: #05ac2f; }
+        .btn-reset { background: #0615e2; }
+        .btn-edit { background: #f59e0b; padding: 5px 10px; }
+        .btn-del { background: #ef4444; padding: 5px 10px; }
+        
         table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.85em; }
         th, td { padding: 10px; border: 1px solid #334155; text-align: center; }
     </style>
@@ -24,15 +30,19 @@
     <div class="card">
         <h2>Input Produk</h2>
         <input type="hidden" id="editIndex" value="-1">
-        Nama Produk<input type="text" id="nama" required>
-        Supplier<input type="text" id="supplier">
-        Tipe/Variasi<input type="text" id="tipe">
-        Modal<input type="text" id="modal" placeholder="Contoh: 100.000">
-        Harga Jual<input type="text" id="jual" placeholder="Contoh: 150.000">
-        Diskon (%)<input type="number" id="diskon" value="0">
-        Admin (Rp)<input type="text" id="admin" value="0">
-        Ongkir (Rp)<input type="text" id="ongkir" value="0">
-        Link Produk<input type="text" id="link">
+        
+        <div class="form-grid">
+            <div>Nama Produk<input type="text" id="nama" required></div>
+            <div>Supplier<input type="text" id="supplier"></div>
+            <div>Tipe/Variasi<input type="text" id="tipe"></div>
+            <div>Modal<input type="text" id="modal" placeholder="100.000"></div>
+            <div>Harga Jual<input type="text" id="jual" placeholder="150.000"></div>
+            <div>Diskon (%)<input type="number" id="diskon" value="0"></div>
+            <div>Admin (Rp)<input type="text" id="admin" value="0"></div>
+            <div>Ongkir (Rp)<input type="text" id="ongkir" value="0"></div>
+            <div class="full-width">Link Produk<input type="text" id="link"></div>
+        </div>
+
         <button class="btn-action btn-save" onclick="simpanData()">Simpan Data</button>
         <button class="btn-action btn-reset" onclick="resetData()">Reset Semua Data</button>
     </div>
@@ -52,6 +62,7 @@
 </div>
 
 <script>
+    // Pastikan URL Google Script Anda sudah benar
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz6aLfDCcNYga8M8usMfvlNcmfwmIxzBdN1SSLGu4WBH0ZwzynhZ7iNXgts6GGPUlGi/exec";
     let dataList = JSON.parse(localStorage.getItem('dropshipData')) || [];
 
@@ -89,7 +100,6 @@
         localStorage.setItem('dropshipData', JSON.stringify(dataList));
         renderTable();
         
-        // Sync ke Google Sheets
         try {
             await fetch(GOOGLE_SCRIPT_URL, {
                 method: 'POST',
@@ -111,8 +121,8 @@
                 <td>${item.profit >= 0 ? "Untung" : "Rugi"}</td>
                 <td><a href="${item.link}" target="_blank">Link</a></td>
                 <td>
-                    <button class="btn-action btn-edit" onclick="editData(${index})">Edit</button>
-                    <button class="btn-action btn-del" onclick="hapusData(${index})">Hapus</button>
+                    <button class="btn-edit" onclick="editData(${index})">Edit</button>
+                    <button class="btn-del" onclick="hapusData(${index})">Hapus</button>
                 </td>
             </tr>`;
         });
@@ -148,7 +158,6 @@
         }
     }
 
-    // Grafik
     const ctx = document.getElementById('profitChart').getContext('2d');
     let profitChart = new Chart(ctx, { type: 'bar', data: { labels: [], datasets: [{ label: 'Profit', data: [], backgroundColor: '#05ac2f' }] } });
 
