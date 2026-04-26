@@ -43,8 +43,8 @@
             <div>Diskon (%)<input type="number" id="diskon" value="0"></div>
             <div>Admin (Rp)<input type="text" id="admin" value="0" ></div>
             <div>Ongkir (Rp)<input type="text" id="ongkir" value="0"></div>
-            <div class="full-width">Link Supplier<input type="text" id="link" required></div>
-            <div class="full-width">Link Toko<input type="text" id="link" required></div>
+            <div class="full-width">Link Supplier<input type="text" id="linksupplier" required></div>
+            <div class="full-width">Link Toko<input type="text" id="linktoko" required></div>
         </div>
 
         <button class="btn-action btn-save" onclick="simpanData()">Simpan Data</button>
@@ -86,7 +86,8 @@
             diskon: parseCleanNumber(document.getElementById('diskon').value),
             admin: parseCleanNumber(document.getElementById('admin').value),
             ongkir: parseCleanNumber(document.getElementById('ongkir').value),
-            link: document.getElementById('link').value
+            link: document.getElementById('linksupplier').value,
+            link: document.getElementById('linktoko').value
         };
 
         if(!data.nama) return alert("Isi nama produk!");
@@ -143,7 +144,8 @@
         document.getElementById('diskon').value = item.diskon;
         document.getElementById('admin').value = item.admin;
         document.getElementById('ongkir').value = item.ongkir;
-        document.getElementById('link').value = item.link;
+        document.getElementById('linksupplier').value = item.link;
+        document.getElementById('linktoko').value = item.link;
         document.getElementById('editIndex').value = index;
     }
 
