@@ -86,11 +86,13 @@
             diskon: parseCleanNumber(document.getElementById('diskon').value),
             admin: parseCleanNumber(document.getElementById('admin').value),
             ongkir: parseCleanNumber(document.getElementById('ongkir').value),
-            link: document.getElementById('linksupplier').value,
-            link: document.getElementById('linktoko').value
+            linksupplier: document.getElementById('linksupplier').value, // Diperbaiki
+            linktoko: document.getElementById('linktoko').value        // Diperbaiki
         };
 
         if(!data.nama) return alert("Isi nama produk!");
+        if(!data.modal) return alert("Isi harga modal!");
+        if(!data.linksupplier) return alert("Isi link supplier!");
 
         const hargaBersih = data.jual - (data.jual * (data.diskon / 100));
         data.profit = hargaBersih - (data.modal + data.admin + data.ongkir);
@@ -124,7 +126,8 @@
                 <td>${item.nama}</td><td>${item.supplier}</td>
                 <td style="color:${item.profit>=0?'#4ade80':'#f87171'}">Rp ${item.profit.toLocaleString()}</td>
                 <td>${item.profit >= 0 ? "Untung" : "Rugi"}</td>
-                <td><a href="${item.link}" target="_blank">Link</a></td>
+                <td><a href="${item.linksupplier}" target="_blank">Supplier</a></td>
+                <td><a href="${item.linktoko}" target="_blank">Toko</a></td>
                 <td>
                     <button class="btn-edit" onclick="editData(${index})">Edit</button>
                     <button class="btn-del" onclick="hapusData(${index})">Hapus</button>
@@ -144,8 +147,8 @@
         document.getElementById('diskon').value = item.diskon;
         document.getElementById('admin').value = item.admin;
         document.getElementById('ongkir').value = item.ongkir;
-        document.getElementById('linksupplier').value = item.link;
-        document.getElementById('linktoko').value = item.link;
+        document.getElementById('linksupplier').value = item.linksupplier; // Perbaikan
+        document.getElementById('linktoko').value = item.linktoko;       // Perbaikan
         document.getElementById('editIndex').value = index;
     }
 
