@@ -85,9 +85,17 @@
         } catch(e) { alert("Sinkronisasi gagal, periksa koneksi atau URL Web App."); }
     }
 
-    function resetForm() {
-        localStorage.clear();
-        location.reload();
+   function resetForm() {
+        // Pin konfirmasi (misalnya: 1234)
+        const pin = prompt("Masukkan PIN untuk konfirmasi Reset:");
+        
+        if (pin === "1234") { // Kamu bisa ganti "1234" dengan PIN yang kamu mau
+            localStorage.clear();
+            location.reload();
+            alert("Data berhasil direset!");
+        } else if (pin !== null) {
+            alert("PIN salah! Reset dibatalkan.");
+        }
     }
 </script>
 </body>
