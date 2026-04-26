@@ -43,7 +43,8 @@
             <div>Diskon (%)<input type="number" id="diskon" value="0"></div>
             <div>Admin (Rp)<input type="text" id="admin" value="0" ></div>
             <div>Ongkir (Rp)<input type="text" id="ongkir" value="0"></div>
-            <div class="full-width">Link Produk<input type="text" id="link" required></div>
+            <div class="full-width">Link Supplier<input type="text" id="link" required></div>
+            <div class="full-width">Link Toko<input type="text" id="link" required></div>
         </div>
 
         <button class="btn-action btn-save" onclick="simpanData()">Simpan Data</button>
@@ -57,7 +58,7 @@
         </div>
         <div class="card">
             <table id="tabelHasil">
-                <thead><tr><th>Produk</th><th>Supplier</th><th>Profit</th><th>Status</th><th>Link</th><th>Aksi</th></tr></thead>
+                <thead><tr><th>Produk</th><th>Supplier</th><th>Profit</th><th>Status</th><th>Link Supplier</th><th>Link Toko</th><th>Aksi</th></tr></thead>
                 <tbody id="isiTabel"></tbody>
             </table>
         </div>
